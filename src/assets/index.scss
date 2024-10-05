@@ -1,0 +1,967 @@
+/**
+ * 审批流配置样式
+ */
+
+@import './variables.scss';
+
+.approve-flow {
+	font-size: 12px;
+	line-height: 1.5;
+	background: $approve-flow-background-color;
+	color: #222;
+	height: 100vh;
+	overflow: hidden;
+	font-family: 'Microsoft Yahei', '微软雅黑', Arial, sans-serif;
+
+	* {
+		box-sizing: border-box;
+	}
+
+	/* #region 调试 */
+
+	.debuggable-item {
+		display: none;
+	}
+
+	&.debuggable {
+		.debuggable-items {
+			position: relative;
+			&.branches {
+				border: $approve-flow-start-color 1px dashed;
+			}
+		}
+
+		.debuggable-item {
+			position: absolute;
+			top: -21px;
+			left: 0;
+			z-index: 22;
+			font-size: 12px;
+			display: block;
+		}
+	}
+
+	/* #endregion 调试 */
+
+	/* #region 拖拽 */
+
+	&.draggable {
+		&.dragging {
+			user-select: none;
+			cursor: move;
+		}
+	}
+
+	/* #endregion 拖拽 */
+
+	/* #region 弹窗 */
+
+	&-modal {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		display: none;
+		z-index: 100;
+
+		&-mask {
+			position: fixed;
+			top: 0;
+			left: 0;
+			z-index: 101;
+			height: 100%;
+			width: 100%;
+			background-color: rgba(0, 0, 0, 0.2);
+		}
+
+		&-container {
+			position: fixed;
+			top: 25%;
+			left: 35%;
+			z-index: 102;
+			height: 50%;
+			width: 30%;
+			background-color: $approve-flow-background-color;
+			transition: width 0.35s;
+		}
+
+		&-header {
+			display: flex;
+			justify-content: space-between;
+			padding: 16px;
+			font-size: 16px;
+			font-weight: bold;
+			border-bottom: $approve-flow-line-color 1px solid;
+		}
+
+		&-close {
+			cursor: pointer;
+			&:hover {
+				svg {
+					stroke-width: 3px;
+				}
+			}
+		}
+
+		&-content {
+			display: flex;
+			flex-direction: column;
+			align-items: flex-start;
+			padding: 0 16px 16px;
+			font-size: 14px;
+		}
+	}
+
+	&-drawer {
+		&-container {
+			top: 0;
+			left: auto;
+			right: -30%;
+			height: 100%;
+			transition: right 0.35s;
+		}
+	}
+
+	/* #endregion 弹窗 */
+
+	/* #region 表单 */
+
+	.node-form {
+		position: fixed;
+		top: 0;
+		z-index: 99;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		width: 100%;
+		height: 80px;
+		padding: 0 20px;
+		background-color: #fff;
+		color: #222;
+		border-bottom: $approve-flow-line-color 1px solid;
+
+		h2 {
+			position: absolute;
+			left: calc(50% - 75px);
+			width: 150px;
+			text-align: center;
+			margin: 0;
+			font-weight: 600;
+			font-size: 22px;
+		}
+
+		h3 {
+			position: absolute;
+			left: 20px;
+			margin: 0;
+			font-weight: 600;
+			font-size: 20px;
+		}
+	}
+
+	.node-form-group {
+		display: flex;
+		align-items: center;
+		gap: 20px;
+		padding: 0 20px;
+
+		.btn-v-line {
+			margin: 5px 20px;
+			width: 1px;
+			height: 30px;
+			background-color: $approve-flow-line-color;
+		}
+
+		.btn-reset {
+			font-size: 16px;
+			color: $approve-flow-condition-color;
+			border: none;
+			background-color: transparent;
+			padding: 0;
+			&:hover {
+				color: $approve-flow-start-color;
+			}
+		}
+
+		.btn-cancel {
+			width: 100px;
+			height: 40px;
+			font-size: 16px;
+			color: $approve-flow-start-color;
+			border: $approve-flow-start-color 1px solid;
+			background-color: transparent;
+			border-radius: 4px;
+			padding: 0;
+			&:hover {
+				box-shadow: 0 8px 25px -8px $approve-flow-start-color;
+			}
+		}
+
+		.btn-submit {
+			width: 100px;
+			height: 40px;
+			font-size: 16px;
+			color: #fff;
+			background-color: $approve-flow-start-color;
+			border: $approve-flow-start-color 1px solid;
+			border-radius: 4px;
+			padding: 0;
+			&:hover {
+				box-shadow: 0 8px 25px -8px $approve-flow-start-color;
+			}
+		}
+	}
+
+	/* #endregion 表单 */
+
+	/* #region 放大缩小 */
+
+	.node-zoom {
+		position: fixed;
+		top: 80px;
+		right: 20px;
+		z-index: 99;
+		padding: 20px;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.node-zoom-text {
+		width: 60px;
+		font-size: 20px;
+		text-align: center;
+		cursor: pointer;
+	}
+
+	.node-zoom-incr,
+	.node-zoom-decr {
+		width: 50px;
+		height: 50px;
+		border: $approve-flow-line-color 1px solid;
+		background: $approve-flow-background-color;
+		position: relative;
+		&[disabled] {
+			cursor: default;
+			background-color: $approve-flow-line-color;
+		}
+	}
+
+	.node-zoom-decr::before,
+	.node-zoom-incr::before {
+		content: ' ';
+		position: absolute;
+		left: 15px;
+		top: 0;
+		bottom: 0;
+		margin: auto 0;
+		width: 20px;
+		height: 3px;
+		background-color: $approve-flow-condition-color;
+	}
+
+	.node-zoom-incr::after {
+		content: ' ';
+		position: absolute;
+		left: 0;
+		top: 15px;
+		right: 0;
+		margin: 0 auto;
+		width: 3px;
+		height: 20px;
+		background-color: $approve-flow-condition-color;
+	}
+
+	/* #endregion 放大缩小 */
+
+	/* #region 节点盒子 */
+
+	.node-tree {
+		height: calc(100vh - 80px);
+		margin-top: 80px;
+		overflow: auto;
+		text-align: center;
+
+		/*高宽分别对应横竖滚动条的尺寸*/
+		&::-webkit-scrollbar {
+			width: 10px;
+			height: 10px;
+		}
+
+		/*滚动条里面小方块*/
+		&::-webkit-scrollbar-thumb {
+			background-color: $approve-flow-arrow-color;
+			border-radius: 10px;
+		}
+
+		/*滚动条里面轨道*/
+		&::-webkit-scrollbar-track {
+			border-radius: 10px;
+		}
+
+		/*滚动条里面边角*/
+		&::-webkit-scrollbar-corner {
+			border-radius: 10px;
+		}
+	}
+
+	.nodes {
+		display: inline-flex;
+		flex-direction: column;
+		&.has-invalid-hover {
+			.is-invalid-node,
+			.is-invalid-path:not(.line-end-arrow),
+			.is-invalid-branches-path,
+			.is-invalid-branch-path > .branch-box-column-v-line > .branch-box-column-line {
+				box-shadow: 0 1px 8px 0 $approve-flow-error-color;
+			}
+		}
+	}
+
+	.node {
+		display: inline-flex;
+		flex-direction: column;
+		width: 100%;
+		align-items: center;
+	}
+
+	.node-box {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		background: #ffffff;
+		width: 240px;
+		min-height: 92px;
+		box-sizing: border-box;
+		box-shadow: 0 1px 8px 0 rgba(0, 0, 0, 0.1);
+		cursor: pointer;
+		z-index: 10;
+		border-radius: 4px;
+		&:hover {
+			.node-move {
+				display: block;
+			}
+		}
+		&.hover-priority:hover {
+			.node-title-priority {
+				display: block;
+			}
+		}
+		&:not(.hover-priority):hover {
+			.node-title-action {
+				display: flex;
+			}
+			.node-title-priority {
+				display: none;
+			}
+		}
+		&.is-invalid-node {
+			border: $approve-flow-error-color 1px solid;
+		}
+	}
+
+	.node-move {
+		display: none;
+		position: absolute;
+		margin: auto;
+		background-repeat: no-repeat;
+		background-size: contain;
+		width: 32px;
+		height: 32px;
+		opacity: 0.8;
+		z-index: 100;
+		cursor: pointer;
+		user-select: none;
+		background-image: url(./assets/node-move-up-icon.png);
+		&:hover {
+			width: 34px;
+			height: 34px;
+			opacity: 1;
+		}
+	}
+
+	.node-move-up {
+		left: 0;
+		right: 0;
+		top: -16px;
+	}
+
+	.node-move-down {
+		left: 0;
+		right: 0;
+		bottom: -16px;
+		transform: rotate(180deg);
+	}
+
+	.node-move-left {
+		top: 0;
+		bottom: 0;
+		left: -16px;
+		transform: rotate(-90deg);
+	}
+
+	.node-move-right {
+		top: 0;
+		bottom: 0;
+		right: -16px;
+		transform: rotate(90deg);
+	}
+
+	.node-title {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		height: 36px;
+		border-radius: 4px 4px 0 0;
+		font-size: 14px;
+		padding: 0 10px;
+		gap: 6px;
+		&:after {
+			content: '';
+			position: absolute;
+			display: inline-block;
+			height: 4px;
+			width: 100%;
+			top: 0;
+			left: 0;
+			border-radius: 2px 2px 0 0;
+		}
+	}
+
+	.node-title-error {
+		position: absolute;
+		right: 0;
+		transform: translate(150%, 0);
+		color: $approve-flow-error-color;
+	}
+
+	.node-title-input {
+		width: 100%;
+		input {
+			width: 100%;
+			outline: none;
+			border: #999 1px solid;
+			border-radius: 4px;
+			padding: 0 2px;
+		}
+	}
+
+	.node-title-text {
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		overflow: hidden;
+	}
+
+	.node-title-priority {
+		word-break: keep-all;
+	}
+
+	.node-title-action {
+		display: none;
+		align-items: center;
+		justify-content: space-between;
+		flex-grow: 1;
+		gap: 6px;
+	}
+
+	.node-title-action-box {
+		display: flex;
+		gap: 6px;
+		&:nth-child(2) {
+			flex-grow: 1;
+			justify-content: flex-end;
+		}
+	}
+
+	.node-title-action-item {
+		width: 16px;
+		height: 16px;
+		padding: 0 2px;
+		cursor: pointer;
+		// border: red 1px solid;
+		&:hover {
+			svg {
+				width: 16px;
+				height: 16px;
+				stroke-width: 3px;
+			}
+		}
+	}
+
+	.node-content {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-grow: 1;
+		padding: 8px 8px 8px 14px;
+		font-size: 14px;
+		position: relative;
+	}
+
+	.node-content-list {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.node-content-text {
+		display: -webkit-box;
+		-webkit-line-clamp: 3;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+		text-align: left;
+		word-break: break-all;
+	}
+
+	.node-content-icon {
+		color: $approve-flow-line-color;
+	}
+
+	/* #endregion 节点盒子 */
+
+	/* #region 结束节点 */
+
+	.is-end {
+		.node-box {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			min-height: 56px;
+			height: 56px;
+			margin-bottom: 80px;
+			cursor: default;
+			font-size: 15px;
+			background-color: $approve-flow-end-color;
+		}
+	}
+
+	/* #endregion 结束节点 */
+
+	/* #region 开始节点：申请人 */
+
+	.is-start {
+		z-index: 10;
+
+		.node-box {
+			margin-top: 80px;
+		}
+
+		.node-title-input {
+			input {
+				border: $approve-flow-start-color 1px solid;
+				color: $approve-flow-start-color;
+			}
+		}
+
+		.node-box:hover {
+			box-shadow: 0 1px 8px 0 $approve-flow-start-color;
+		}
+
+		.node-title {
+			background: #e9f2ff;
+			color: $approve-flow-start-color;
+		}
+
+		.node-title:after {
+			background: $approve-flow-start-color;
+		}
+	}
+
+	/* #endregion 开始节点：申请人 */
+
+	/* #region 条件 */
+
+	.is-condition {
+		z-index: 10;
+
+		// 默认条件
+		&.is-default {
+			.node-box {
+				cursor: default;
+			}
+		}
+
+		.node-box {
+			display: inline-flex;
+			margin: 50px 50px 0px 50px;
+		}
+
+		.node-title-input {
+			input {
+				border: $approve-flow-condition-color 1px solid;
+				color: $approve-flow-condition-color;
+			}
+		}
+
+		.node-box:hover {
+			box-shadow: 0 1px 8px 0 $approve-flow-condition-color;
+		}
+
+		.node-title {
+			background: #e9f2ff;
+			color: $approve-flow-condition-color;
+		}
+
+		.node-title:after {
+			background: $approve-flow-condition-color;
+		}
+
+		.node-content-text {
+			color: $approve-flow-condition-color;
+		}
+	}
+
+	/* #endregion 条件 */
+
+	/* #region 审批人 */
+
+	.is-approver {
+		.node-box:hover {
+			box-shadow: 0 1px 8px 0 $approve-flow-approver-color;
+		}
+
+		.node-title {
+			background: #fff9ee;
+			color: $approve-flow-approver-color;
+		}
+
+		.node-title-input {
+			input {
+				border: $approve-flow-approver-color 1px solid;
+				color: $approve-flow-approver-color;
+			}
+		}
+
+		.node-title:after {
+			background: $approve-flow-approver-color;
+		}
+	}
+
+	/* #endregion  审批人 */
+
+	/* #region 抄送人 */
+
+	.is-notifier {
+		.node-box:hover {
+			box-shadow: 0 1px 8px 0 $approve-flow-notifier-color;
+		}
+
+		.node-title {
+			background: #e6f8f8;
+			color: $approve-flow-notifier-color;
+		}
+
+		.node-title-input {
+			input {
+				border: $approve-flow-notifier-color 1px solid;
+				color: $approve-flow-notifier-color;
+			}
+		}
+
+		.node-title:after {
+			background: $approve-flow-notifier-color;
+		}
+	}
+
+	/* #endregion  抄送人 */
+
+	/* #region 节点线路 */
+
+	.line-end-arrow {
+		position: absolute;
+		top: -8px;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 0;
+		height: 4px;
+		border-style: solid;
+		border-width: 8px 5px 4px;
+		border-color: $approve-flow-arrow-color transparent transparent;
+		&.is-invalid-path {
+			border-color: $approve-flow-error-color transparent transparent;
+		}
+	}
+
+	.add-node {
+		position: relative;
+		width: 240px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.add-node-line {
+		width: 2px;
+		height: 100%;
+		margin-left: 4px;
+		background-color: $approve-flow-line-color;
+		&.is-invalid-path {
+			background-color: $approve-flow-error-color;
+		}
+	}
+
+	.add-node-v-line {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		margin: auto;
+		width: 10px;
+		height: 100%;
+	}
+
+	.add-node-btn {
+		position: relative;
+		user-select: none;
+		width: 30px;
+		margin: 35px 0 35px;
+	}
+
+	.add-node-btn-box {
+		position: relative;
+		outline: none;
+		width: 30px;
+		height: 30px;
+		background-color: #a0b5c8;
+		border-radius: 50%;
+		line-height: 30px;
+		cursor: pointer;
+		text-align: center;
+		&:hover {
+			background-color: #8599aa;
+		}
+	}
+
+	.add-node-btn-icon {
+		&:before {
+			content: '';
+			position: absolute;
+			display: inline-block;
+			width: 2px;
+			height: 16px;
+			left: 14px;
+			top: 7px;
+			background-color: #fff;
+		}
+		&:after {
+			content: '';
+			position: absolute;
+			display: inline-block;
+			height: 2px;
+			width: 16px;
+			top: 14px;
+			left: 7px;
+			background-color: #fff;
+		}
+	}
+
+	.branches {
+		display: inline-flex;
+		width: 100%;
+		justify-content: center;
+	}
+
+	.branch {
+		display: inline-flex;
+		position: relative;
+	}
+
+	.branch-box {
+		display: inline-flex;
+		min-height: 180px;
+		margin-top: 15px;
+		border-top: 2px solid $approve-flow-line-color;
+		border-bottom: 2px solid $approve-flow-line-color;
+		justify-content: center;
+	}
+
+	.add-branch {
+		width: 84px;
+		height: 34px;
+		background-color: #fff;
+		position: absolute;
+		left: 50%;
+		transform: translateX(-50%);
+		top: 0px;
+		border-radius: 4px;
+		box-shadow: 0 1px 8px 0 rgba(0, 0, 0, 0.1);
+		font-size: 14px;
+		color: $approve-flow-start-color;
+		text-align: center;
+		line-height: 34px;
+		z-index: 21;
+		cursor: pointer;
+		user-select: none;
+	}
+
+	.branch-box-column {
+		position: relative;
+		padding: 0 20px;
+		background-color: $approve-flow-background-color;
+		&.is-invalid-branch-path {
+			border-top-color: $approve-flow-error-color;
+			border-bottom-color: $approve-flow-error-color;
+			// 只更自己下面的。不影响子级
+			& > .branch-box-column-v-line > .branch-box-column-line {
+				background-color: $approve-flow-error-color !important;
+			}
+		}
+	}
+
+	.branch-box-column-line {
+		margin-left: 4px;
+		width: 2px;
+		height: 100%;
+		background-color: $approve-flow-line-color;
+	}
+
+	.branch-box-column-v-line {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 0;
+		margin: auto;
+		width: 10px;
+		height: 100%;
+	}
+
+	.branch-box-column-nodes {
+		display: inline-flex;
+		flex-direction: column;
+	}
+
+	.branch-box-line {
+		margin-top: 4px;
+		height: 2px;
+		background-color: $approve-flow-line-color;
+		&.is-invalid-branches-path {
+			background-color: $approve-flow-error-color;
+		}
+	}
+
+	.branch-box-top-line {
+		position: absolute;
+		left: 0;
+		height: 10px;
+		z-index: 10;
+		margin-top: -6px;
+	}
+
+	.branch-box-bottom-line {
+		position: absolute;
+		left: 0;
+		bottom: -4px;
+		height: 10px;
+		z-index: 10;
+	}
+
+	// 用来遮挡branch-box溢出的border-top或bottom-bottom
+	.top-left-line {
+		position: absolute;
+		height: 2px;
+		width: 50%;
+		background-color: $approve-flow-background-color;
+		top: -2px;
+		left: -1px;
+		z-index: 11;
+	}
+
+	.bottom-left-line {
+		position: absolute;
+		height: 2px;
+		width: 50%;
+		background-color: $approve-flow-background-color;
+		bottom: -2px;
+		left: -1px;
+		z-index: 11;
+	}
+
+	.top-right-line {
+		position: absolute;
+		height: 2px;
+		width: 50%;
+		background-color: $approve-flow-background-color;
+		top: -2px;
+		right: -1px;
+	}
+
+	.bottom-right-line {
+		position: absolute;
+		height: 2px;
+		width: 50%;
+		background-color: $approve-flow-background-color;
+		bottom: -2px;
+		right: -1px;
+	}
+
+	/* #endregion 节点线路 */
+
+	/* #region 节点操作 */
+
+	.node-action {
+		position: absolute;
+		top: 0px;
+		left: 0px;
+		z-index: 30;
+		display: none;
+	}
+
+	.node-action:before {
+		content: '';
+		position: absolute;
+		z-index: 499;
+		display: block;
+		width: 8px;
+		height: 8px;
+		transform: rotate(45deg);
+		border-style: solid;
+		border-width: 6px;
+		border-color: #fff;
+		left: -4px;
+		top: 30px;
+	}
+
+	.node-action-box {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		border-radius: 4px;
+		background-color: #fff;
+		box-shadow: 0 1px 8px 0 rgba(0, 0, 0, 0.2);
+	}
+
+	.node-action-item {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		font-size: 14px;
+		width: 90px;
+		height: 74px;
+		gap: 0.5rem;
+		position: relative;
+		z-index: 500;
+		color: #999;
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	.node-action-item:hover {
+		background-color: #f9fbfd;
+	}
+
+	.node-action-approver {
+		color: $approve-flow-approver-color !important;
+	}
+
+	.node-action-notifier {
+		color: $approve-flow-notifier-color !important;
+	}
+
+	/* #endregion 节点操作 */
+}
